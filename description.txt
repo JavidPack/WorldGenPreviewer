@@ -1,0 +1,3 @@
+﻿This mod changes the world generation screen to include a preview of the map as it generates. You can also pause/resume generation if you like.
+
+Please let me know problems you run into.

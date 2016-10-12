@@ -61,6 +61,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="UIPassItem.cs" />
     <Compile Include="WorldGenPreviewer.cs" />
     <Compile Include="UIWorldLoadSpecial.cs" />
   </ItemGroup>

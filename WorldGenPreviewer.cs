@@ -20,10 +20,14 @@ namespace WorldGenPreviewer
 
 	internal class WorldGenPreviewerModWorld : ModWorld
 	{
-		internal static bool continueWorldGen2 = true;
+		internal static bool continueWorldGen = true;
+		internal static bool pauseAfterContinue = false;
+		internal static bool repeatPreviousStep = false;
+		internal static List<GenPass> generationPasses;
 
 		public override void ModifyWorldGenTasks(List<GenPass> tasks, ref float totalWeight)
 		{
+			generationPasses = tasks;
 			// Reset Terrain
 			// Reset Special Terrain
 			// or after reset
@@ -34,7 +38,7 @@ namespace WorldGenPreviewer
 				{
 					progress.Message = "Setting up Special World Gen Progress";
 					Main.refreshMap = true;
-					var a = new UIWorldLoadSpecial(progress, mod.GetTexture("pause"), mod.GetTexture("play"));
+					var a = new UIWorldLoadSpecial(progress, mod);
 					Main.updateMap = false;
 					Main.mapFullscreen = true;
 					Main.mapStyle = 0;
@@ -55,16 +59,47 @@ namespace WorldGenPreviewer
 				for (int i = tasks.Count - 1; i >= ResetStepIndex + 2; i--)
 				{
 					string name = tasks[i - 1].Name;
+					GenPass previous = tasks[i - 1];
 					tasks.Insert(i, new PassLegacy("World Gen Paused", delegate (GenerationProgress progress)
 					{
-						if (!continueWorldGen2)
+						foreach (var item in UIWorldLoadSpecial.instance.passesList._items)
+						{
+							UIPassItem passitem = item as UIPassItem;
+							passitem.Complete();
+							if (passitem.pass == previous)
+							{
+								break;
+							}
+						}
+						if (!continueWorldGen)
 						{
 							progress.Message = "World Gen Paused after " + name;
+							UIWorldLoadSpecial.instance.statusLabel.SetText("Status: Paused");
 						}
 						while (true)
 						{
-							if (continueWorldGen2)
+							if (repeatPreviousStep)
 							{
+								repeatPreviousStep = false;
+								//string previousStatus = UIWorldLoadSpecial.instance.statusLabel.SetText
+								UIWorldLoadSpecial.instance.statusLabel.SetText("Status: Doing Previous Step Again");
+								previous.Apply(progress);
+								//if (continueWorldGen)
+								//{
+								//	UIWorldLoadSpecial.instance.statusLabel.SetText("Status: Normal");
+								//}
+								//else
+								//{
+								UIWorldLoadSpecial.instance.statusLabel.SetText("Status: Paused");
+								//}
+							}
+							if (continueWorldGen)
+							{
+								if (pauseAfterContinue)
+								{
+									pauseAfterContinue = false;
+									continueWorldGen = false;
+								}
 								break;
 							}
 						}

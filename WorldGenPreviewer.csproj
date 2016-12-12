@@ -69,13 +69,13 @@
     <Content Include="build.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\Modding\tModLoader\src\tModLoader\Terraria.csproj">
       <Project>{3996d5fa-6e59-4fe4-9f2b-40eeef9645d5}</Project>
       <Name>Terraria</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

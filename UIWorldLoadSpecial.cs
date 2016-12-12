@@ -317,6 +317,10 @@ namespace WorldGenPreviewer
 			// need exact coords. jerky
 			//	Main.spriteBatch.Draw(Main.magicPixel, new Vector2(((float)ScanLineX / Main.maxTilesX) * Main.screenWidth, 0), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(0, 0, 10, 500)), Color.Green, 0f, default(Vector2), 1f, SpriteEffects.None, 0f);
 
+
+		//	spriteBatch.DrawString(WorldGenPreviewer.tiny, "This is tiny text", new Vector2(300,300), Color.White);
+
+
 			float offscreenXMin = 10f;
 			float offscreenYMin = 10f;
 			//float num8 = (float)(Main.maxTilesX - 10);
@@ -335,11 +339,12 @@ namespace WorldGenPreviewer
 			int tileY = (int)((-num2 + (float)Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
 			if(WorldGen.InWorld(tileX, tileY, 10))
 			{
-				statusLabel.SetText("Status: " + Main.tile[tileX, tileY].type);
+				statusLabel.SetText("TileID: " + Main.tile[tileX, tileY].type);
 				if (Main.mouseRight && Main.mouseRightRelease)
 				{
-					//WorldGen.ShroomPatch(tileX, tileY);
-					WorldGen.MakeDungeon(tileX, tileY);
+				//	WorldGen.ShroomPatch(tileX, tileY);
+				//	WorldGen.MakeDungeon(tileX, tileY);
+				//	WorldGen.GrowTree(tileX, tileY);
 				}
 			}
 		}

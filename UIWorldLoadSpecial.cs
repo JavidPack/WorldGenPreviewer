@@ -38,6 +38,7 @@ namespace WorldGenPreviewer
 		public UIImageButton playButton;
 		public UIImageButton pauseButton;
 		public UIImageButton nextButton;
+		public UIImageButton cancelButton;
 		public UIText statusLabel;
 
 		public static UIWorldLoadSpecial instance;
@@ -58,6 +59,7 @@ namespace WorldGenPreviewer
 			playButton = new UIImageButton(playTexture);
 			pauseButton = new UIImageButton(pauseTexture);
 			nextButton = new UIImageButton(nextTexture);
+			cancelButton = new UIImageButton(mod.GetTexture("cancel"));
 
 			passesPanel = new UIPanel();
 			passesPanel.SetPadding(3);
@@ -138,6 +140,12 @@ namespace WorldGenPreviewer
 			nextButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
 
+			buttonPanel.Append(cancelButton);
+			cancelButton.OnClick += CancelClick;
+			cancelButton.Left.Pixels = calculatedWidth;
+			cancelButton.Top.Pixels = spacing;
+			calculatedWidth += spacing + 32;
+
 			statusLabel = new UIText("Status: Normal", 1f, false);
 			statusLabel.VAlign = 1f;
 			statusLabel.HAlign = 0.5f;
@@ -158,6 +166,11 @@ namespace WorldGenPreviewer
 			this._progress = progress;
 			base.Append(this._progressBar);
 			base.Append(this._progressMessage);
+		}
+
+		private void CancelClick(UIMouseEvent evt, UIElement listeningElement)
+		{
+			throw new Exception("WorldGenPreviewer: User canceled World Gen\n");
 		}
 
 		public int SortMethod2(UIElement item1, UIElement item2)
@@ -318,7 +331,7 @@ namespace WorldGenPreviewer
 			//	Main.spriteBatch.Draw(Main.magicPixel, new Vector2(((float)ScanLineX / Main.maxTilesX) * Main.screenWidth, 0), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(0, 0, 10, 500)), Color.Green, 0f, default(Vector2), 1f, SpriteEffects.None, 0f);
 
 
-		//	spriteBatch.DrawString(WorldGenPreviewer.tiny, "This is tiny text", new Vector2(300,300), Color.White);
+			//	spriteBatch.DrawString(WorldGenPreviewer.tiny, "This is tiny text", new Vector2(300,300), Color.White);
 
 
 			float offscreenXMin = 10f;
@@ -337,14 +350,14 @@ namespace WorldGenPreviewer
 
 			int tileX = (int)((-num + (float)Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
 			int tileY = (int)((-num2 + (float)Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
-			if(WorldGen.InWorld(tileX, tileY, 10))
+			if (WorldGen.InWorld(tileX, tileY, 10))
 			{
 				statusLabel.SetText("TileID: " + Main.tile[tileX, tileY].type);
 				if (Main.mouseRight && Main.mouseRightRelease)
 				{
-				//	WorldGen.ShroomPatch(tileX, tileY);
-				//	WorldGen.MakeDungeon(tileX, tileY);
-				//	WorldGen.GrowTree(tileX, tileY);
+					//	WorldGen.ShroomPatch(tileX, tileY);
+					//	WorldGen.MakeDungeon(tileX, tileY);
+					//	WorldGen.GrowTree(tileX, tileY);
 				}
 			}
 		}

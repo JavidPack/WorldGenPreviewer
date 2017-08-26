@@ -1,5 +1,5 @@
 ﻿author = jopojelly
-version = 0.1.4
+version = 0.1.5.1
 displayName = WorldGen Previewer
 includePDB = true
 languageVersion = 6
@@ -8,4 +8,4 @@ homepage = http://forums.terraria.org/index.php?threads/worldgen-previewer.49753
 hideCode = false
 hideResources = false
 includeSource = true
-buildIgnore = .vs\*, Properties\*, *.csproj, *.user, obj\*, bin\*, *.config, lib\*, .gitignore
+buildIgnore = .vs\*, Properties\*, *.csproj, *.user, obj\*, bin\*, *.config, lib\*, .gitignore, .git\*

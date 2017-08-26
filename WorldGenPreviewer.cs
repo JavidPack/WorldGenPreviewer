@@ -9,12 +9,16 @@ namespace WorldGenPreviewer
 {
 	public class WorldGenPreviewer : Mod
 	{
-		public WorldGenPreviewer()
+		internal static WorldGenPreviewer instance;
+
+		public override void Load()
 		{
-			Properties = new ModProperties()
-			{
-				Autoload = true, // We need Autoload to be true so our ModWorld class below will be loaded.
-			};
+			instance = this;
+		}
+
+		public override void Unload()
+		{
+			instance = null;
 		}
 	}
 
@@ -65,9 +69,9 @@ namespace WorldGenPreviewer
 						foreach (var item in UIWorldLoadSpecial.instance.passesList._items)
 						{
 							UIPassItem passitem = item as UIPassItem;
-							passitem.Complete();
 							if (passitem.pass == previous)
 							{
+								passitem.Complete();
 								break;
 							}
 						}

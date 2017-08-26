@@ -7,25 +7,54 @@ using Terraria.World.Generation;
 using Terraria;
 using Terraria.ModLoader;
 using Microsoft.Xna.Framework;
+using System;
+using Terraria.GameContent.Generation;
+using System.Reflection;
 
 namespace WorldGenPreviewer
 {
-	class UIPassItem : UIText
+	class UIPassItem : UIElement
 	{
 		int order = 0;
 		bool complete = false;
 		public GenPass pass;
-		public UIPassItem(int order, GenPass pass, string text, float textScale = 1, bool large = false) : base(text, textScale, large)
+		UIText uitext;
+		public UIPassItem(int order, GenPass pass, string text, float textScale = 1, bool large = false)
 		{
 			this.pass = pass;
 			this.order = order;
 			//TextColor = Color.Blue;
+
+			Width = StyleDimension.Fill;
+			Height.Pixels = 15;
+
+			uitext = new UIText(text, textScale, large);
+			uitext.Left.Set(20, 0);
+			Append(uitext);
+
+			UIImageButton close = new UIImageButton(WorldGenPreviewer.instance.GetTexture("closeButton"));
+			close.OnClick += RemoveThisPass;
+			//close.Left.Set(-45, 1);
+			close.Left.Set(0, 0);
+			Append(close);
+		}
+
+		private void RemoveThisPass(UIMouseEvent evt, UIElement listeningElement)
+		{
+			PassLegacy passLegacy = pass as PassLegacy;
+			if (passLegacy != null)
+			{
+				//private WorldGenLegacyMethod _method;
+				FieldInfo methodFieldInfo = typeof(PassLegacy).GetField("_method", BindingFlags.Instance | BindingFlags.NonPublic);
+				methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod) delegate (GenerationProgress progress) { });
+			}
+			UIWorldLoadSpecial.instance.passesList.Remove(this);
 		}
 
 		public void Complete()
 		{
 			complete = true;
-			TextColor = Color.Red;
+			uitext.TextColor = Color.Red;
 			//Recalculate();
 		}
 

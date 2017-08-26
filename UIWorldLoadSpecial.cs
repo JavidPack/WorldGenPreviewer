@@ -44,6 +44,7 @@ namespace WorldGenPreviewer
 		public static UIWorldLoadSpecial instance;
 
 		float spacing = 8f;
+		const float panelWidth = 230;
 
 		public UIWorldLoadSpecial(GenerationProgress progress, Mod mod)
 		{
@@ -63,10 +64,10 @@ namespace WorldGenPreviewer
 
 			passesPanel = new UIPanel();
 			passesPanel.SetPadding(3);
-			passesPanel.Left.Pixels = listHidden ? 170 : 0;
+			passesPanel.Left.Pixels = listHidden ? panelWidth : 0;
 			passesPanel.HAlign = 1f;
 			passesPanel.Top.Set(0f, 0f);
-			passesPanel.Width.Set(170f, 0f);
+			passesPanel.Width.Set(panelWidth, 0f);
 			passesPanel.Height.Set(0f, 1f);
 			passesPanel.BackgroundColor = new Color(73, 94, 171);
 
@@ -201,7 +202,7 @@ namespace WorldGenPreviewer
 			//ErrorLogger.Log("MENU");
 			//statusLabel.SetText("Status: ??...");
 			listHidden = !listHidden;
-			passesPanel.Left.Pixels = listHidden ? 170 : 0;
+			passesPanel.Left.Pixels = listHidden ? panelWidth : 0;
 			passesPanel.Recalculate();
 		}
 

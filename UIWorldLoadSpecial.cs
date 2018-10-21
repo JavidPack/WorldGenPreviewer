@@ -12,6 +12,7 @@ using Terraria.ModLoader;
 using Terraria.Map;
 using System.IO;
 using System.Reflection;
+using Terraria.GameContent.Generation;
 
 namespace WorldGenPreviewer
 {
@@ -171,7 +172,33 @@ namespace WorldGenPreviewer
 
 		private void CancelClick(UIMouseEvent evt, UIElement listeningElement)
 		{
-			throw new Exception("WorldGenPreviewer: User canceled World Gen\n");
+			// This approach left the world gen continuing in the other thread, corrupting subsequent world gen attempts
+			//throw new Exception("WorldGenPreviewer: User canceled World Gen\n");
+
+			// This didn't work because the enumerator is used in the foreach.
+			//FieldInfo passesFieldInfo = typeof(WorldGenerator).GetField("_passes", BindingFlags.Instance | BindingFlags.NonPublic);
+			//FieldInfo generatorFieldInfo = typeof(WorldGen).GetField("_generator", BindingFlags.Static | BindingFlags.NonPublic);
+			//WorldGenerator _generator = (WorldGenerator)generatorFieldInfo.GetValue(null);
+			//passesFieldInfo.SetValue(_generator, null);
+
+			// saveLock prevents save, but needs to be restored to false.
+			WorldGenPreviewerModWorld.saveLockForced = true;
+			WorldGen.saveLock = true;
+			FieldInfo methodFieldInfo = typeof(PassLegacy).GetField("_method", BindingFlags.Instance | BindingFlags.NonPublic);
+			// This method still can't cancel infinite loops in passes. This can't be avoided. We could try forcing an exception on the world gen thread like `Main.tile = null`, but we'd have to restore the reference somehow.
+			foreach (var item in passesList._items)
+			{
+				UIPassItem passitem = item as UIPassItem;
+
+				PassLegacy passLegacy = passitem.pass as PassLegacy;
+				if (passLegacy != null)
+				{
+					methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod)delegate (GenerationProgress progress) { });
+				}
+			}
+			WorldGenPreviewerModWorld.continueWorldGen = true;
+			WorldGenPreviewerModWorld.pauseAfterContinue = false;
+			statusLabel.SetText("Status: Canceling...");
 		}
 
 		public int SortMethod2(UIElement item1, UIElement item2)
@@ -276,6 +303,7 @@ namespace WorldGenPreviewer
 			}
 
 			Main.spriteBatch.End();
+			// TODO: Look into texture contents lost on resize issue.
 			drawToMap.Invoke(Main.instance, null); // Draw to the map texture.
 			Main.spriteBatch.Begin();
 			drawMap.Invoke(Main.instance, null); // Draws map texture to screen. Also draws Tooltips.
@@ -313,6 +341,8 @@ namespace WorldGenPreviewer
 			//oldTotalProgress = progress;
 			//int x = Main.rand.Next(Main.mapMaxX);
 			//for (int i = 0; i < Main.maxTilesX; i++)
+
+			// TODO: Do this in a different thread.
 			for (int i = ScanLineX; i < ScanLineX + 300; i++)
 			{
 				for (int j = 0; j < Main.maxTilesY; j++)
@@ -340,16 +370,16 @@ namespace WorldGenPreviewer
 			//float num8 = (float)(Main.maxTilesX - 10);
 			//float num9 = (float)(Main.maxTilesY - 10);
 
-			float num20 = Main.mapFullscreenPos.X;
+			float num20 = Main.mapFullscreenPos.X;// does it zoom into cursor or center.
 			float num21 = Main.mapFullscreenPos.Y;
 			num20 *= Main.mapFullscreenScale;
 			num21 *= Main.mapFullscreenScale;
-			float num = -num20 + (float)(Main.screenWidth / 2);
+			float panX = -num20 + (float)(Main.screenWidth / 2);
 			float num2 = -num21 + (float)(Main.screenHeight / 2);
-			num += offscreenXMin * Main.mapFullscreenScale;
+			panX += offscreenXMin * Main.mapFullscreenScale;
 			num2 += offscreenYMin * Main.mapFullscreenScale;
 
-			int tileX = (int)((-num + (float)Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
+			int tileX = (int)((-panX + (float)Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
 			int tileY = (int)((-num2 + (float)Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
 			if (WorldGen.InWorld(tileX, tileY, 10))
 			{
@@ -361,6 +391,33 @@ namespace WorldGenPreviewer
 					//	WorldGen.GrowTree(tileX, tileY);
 				}
 			}
+
+			int scanX = (int)((ScanLineX - offscreenXMin) * Main.mapFullscreenScale + panX);
+			int scanY = (int)((10 - offscreenYMin) * Main.mapFullscreenScale + num2);
+			int scanHeight = (int)((Main.maxTilesY - 10) * Main.mapFullscreenScale);
+			Main.spriteBatch.Draw(Main.magicPixel, new Rectangle(scanX, scanY, 1, scanHeight), Color.LightPink);
+
+			/*
+			if (WorldGenPreviewerModWorld.structures_structures != null)
+			{
+				for (int i = 0; i < WorldGenPreviewerModWorld.structures_structures.Count; i++)
+				{
+					Rectangle item = WorldGenPreviewerModWorld.structures_structures[i];
+
+					//int x = (int)((-num + Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
+					//int y = (int)((-num2 + Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
+					int x = (int)((item.X - offscreenXMin) * Main.mapFullscreenScale + panX);
+					int y = (int)((item.Y - offscreenYMin) * Main.mapFullscreenScale + num2);
+					int width = (int)(item.Width * Main.mapFullscreenScale);
+					int height = (int)(item.Height * Main.mapFullscreenScale);
+
+					// offscreenMin offsets the draw by 10 pixels
+
+					Rectangle drawRectangle = new Rectangle(x, y, width, height);
+					Main.spriteBatch.Draw(Main.magicPixel, drawRectangle, Color.Green * 0.6f);
+				}
+			}
+			*/
 		}
 		//float oldTotalProgress = -1f;
 		int ScanLineX = 0;

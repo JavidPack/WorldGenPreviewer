@@ -4,6 +4,7 @@ using Terraria.GameContent.Generation;
 using System.Collections.Generic;
 using Terraria.World.Generation;
 using Microsoft.Xna.Framework;
+using System.Reflection;
 
 namespace WorldGenPreviewer
 {
@@ -24,10 +25,20 @@ namespace WorldGenPreviewer
 
 	internal class WorldGenPreviewerModWorld : ModWorld
 	{
+		internal static bool saveLockForced = false;
 		internal static bool continueWorldGen = true;
 		internal static bool pauseAfterContinue = false;
 		internal static bool repeatPreviousStep = false;
 		internal static List<GenPass> generationPasses;
+
+		public override void Initialize()
+		{
+			if (saveLockForced)
+			{
+				saveLockForced = false;
+				WorldGen.saveLock = false;
+			}
+		}
 
 		public override void ModifyWorldGenTasks(List<GenPass> tasks, ref float totalWeight)
 		{
@@ -121,6 +132,16 @@ namespace WorldGenPreviewer
 			// reset map to original
 			Main.mapFullscreen = false;
 			Main.mapStyle = 1;
+			//structures_structures = null;
 		}
+
+		/* TODO: enable this via a toggle button
+		internal static List<Rectangle> structures_structures; // reference to WorldGen.structures._structures
+		public override void PreWorldGen()
+		{
+			FieldInfo structuresField = typeof(StructureMap).GetField("_structures", BindingFlags.Instance | BindingFlags.NonPublic);
+			structures_structures = (List<Rectangle>)structuresField.GetValue(WorldGen.structures);
+		}
+		*/
 	}
 }

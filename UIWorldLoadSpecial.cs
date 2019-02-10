@@ -279,8 +279,12 @@ namespace WorldGenPreviewer
 			genprogress = typeof(GenerationProgress).GetField("_totalProgress", BindingFlags.Instance | BindingFlags.NonPublic);
 		}
 
+		internal static bool BadPass;
 		protected override void DrawSelf(SpriteBatch spriteBatch)
 		{
+			if (BadPass)
+				return;
+
 			this._progressBar.SetProgress(this._progress.TotalProgress, this._progress.Value);
 			this._progressMessage.Text = this._progress.Message;
 			this.UpdateGamepadSquiggle();

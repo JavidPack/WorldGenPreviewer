@@ -75,8 +75,11 @@ namespace WorldGenPreviewer
 				{
 					string name = tasks[i - 1].Name;
 					GenPass previous = tasks[i - 1];
+					GenPass next = tasks[i];
 					tasks.Insert(i, new PassLegacy("World Gen Paused", delegate (GenerationProgress progress)
 					{
+						UIWorldLoadSpecial.BadPass = next.Name == "Expand World";
+
 						foreach (var item in UIWorldLoadSpecial.instance.passesList._items)
 						{
 							UIPassItem passitem = item as UIPassItem;

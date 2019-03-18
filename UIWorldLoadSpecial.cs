@@ -387,7 +387,7 @@ namespace WorldGenPreviewer
 			int tileY = (int)((-num2 + (float)Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
 			if (WorldGen.InWorld(tileX, tileY, 10))
 			{
-				statusLabel.SetText("TileID: " + Main.tile[tileX, tileY].type);
+				statusLabel.SetText("TileID: " + Main.tile[tileX, tileY]?.type);
 				if (Main.mouseRight && Main.mouseRightRelease)
 				{
 					//	WorldGen.ShroomPatch(tileX, tileY);

@@ -13,6 +13,7 @@ using Terraria.Map;
 using System.IO;
 using System.Reflection;
 using Terraria.GameContent.Generation;
+using Terraria.ID;
 
 namespace WorldGenPreviewer
 {
@@ -385,9 +386,17 @@ namespace WorldGenPreviewer
 
 			int tileX = (int)((-panX + (float)Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
 			int tileY = (int)((-num2 + (float)Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
-			if (WorldGen.InWorld(tileX, tileY, 10))
+			if (WorldGen.InWorld(tileX, tileY, 10) && Main.tile[tileX, tileY].active())
 			{
-				statusLabel.SetText("TileID: " + Main.tile[tileX, tileY].type);
+				int tileType = Main.tile[tileX, tileY].type;
+				string tileName = Lang._mapLegendCache.FromTile(Main.Map[tileX, tileY], tileX, tileY);
+				if (tileName == "") {
+					if (tileType < TileID.Count)
+						tileName = $"TileID.{TileID.Search.GetName(tileType)} ({tileType})";
+					else
+						tileName = TileLoader.GetTile(tileType).Name;
+				}
+				statusLabel.SetText($"Tile: {tileName}");
 				if (Main.mouseRight && Main.mouseRightRelease)
 				{
 					//	WorldGen.ShroomPatch(tileX, tileY);

@@ -1,8 +1,7 @@
 ﻿author = jopojelly
-version = 0.3
+version = 0.3.1
 displayName = WorldGen Previewer
 includePDB = true
-languageVersion = 6
 side = Client
 homepage = http://forums.terraria.org/index.php?threads/worldgen-previewer.49753/
 hideCode = false

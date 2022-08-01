@@ -15,6 +15,8 @@ using System.Reflection;
 using Terraria.GameContent.Generation;
 using Terraria.ID;
 using Terraria.WorldBuilding;
+using ReLogic.Content;
+using Terraria.IO;
 
 namespace WorldGenPreviewer
 {
@@ -27,11 +29,11 @@ namespace WorldGenPreviewer
 		public MethodInfo drawMap;
 		public MethodInfo drawToMap;
 		public FieldInfo genprogress;
-		public Texture2D menuTexture;
-		public Texture2D previousTexture;
-		public Texture2D playTexture;
-		public Texture2D pauseTexture;
-		public Texture2D nextTexture;
+		public Asset<Texture2D> menuTexture;
+		public Asset<Texture2D> previousTexture;
+		public Asset<Texture2D> playTexture;
+		public Asset<Texture2D> pauseTexture;
+		public Asset<Texture2D> nextTexture;
 
 		public UIPanel buttonPanel;
 		public UIPanel passesPanel;
@@ -51,19 +53,21 @@ namespace WorldGenPreviewer
 
 		public UIWorldLoadSpecial(GenerationProgress progress, Mod mod)
 		{
+			Asset<Texture2D> GetTextureForUI(string assetName) => mod.Assets.Request<Texture2D>(assetName, AssetRequestMode.ImmediateLoad);
+
 			instance = this;
-			menuTexture = mod.GetTexture("menu");
-			previousTexture = mod.GetTexture("previous");
-			playTexture = mod.GetTexture("play");
-			pauseTexture = mod.GetTexture("pause");
-			nextTexture = mod.GetTexture("next");
+			menuTexture = GetTextureForUI("menu");
+			previousTexture = GetTextureForUI("previous");
+			playTexture = GetTextureForUI("play");
+			pauseTexture = GetTextureForUI("pause");
+			nextTexture = GetTextureForUI("next");
 
 			menuButton = new UIImageButton(menuTexture);
 			previousButton = new UIImageButton(previousTexture);
 			playButton = new UIImageButton(playTexture);
 			pauseButton = new UIImageButton(pauseTexture);
 			nextButton = new UIImageButton(nextTexture);
-			cancelButton = new UIImageButton(mod.GetTexture("cancel"));
+			cancelButton = new UIImageButton(GetTextureForUI("cancel"));
 
 			passesPanel = new UIPanel();
 			passesPanel.SetPadding(3);
@@ -185,7 +189,8 @@ namespace WorldGenPreviewer
 
 			// saveLock prevents save, but needs to be restored to false.
 			WorldGenPreviewerModWorld.saveLockForced = true;
-			WorldGen.saveLock = true;
+			Main.skipMenu = true;
+	//		WorldGen.saveLock = true;
 			FieldInfo methodFieldInfo = typeof(PassLegacy).GetField("_method", BindingFlags.Instance | BindingFlags.NonPublic);
 			// This method still can't cancel infinite loops in passes. This can't be avoided. We could try forcing an exception on the world gen thread like `Main.tile = null`, but we'd have to restore the reference somehow.
 			foreach (var item in passesList._items)
@@ -195,7 +200,7 @@ namespace WorldGenPreviewer
 				PassLegacy passLegacy = passitem.pass as PassLegacy;
 				if (passLegacy != null)
 				{
-					methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod)delegate (GenerationProgress progress) { });
+					methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod)delegate (GenerationProgress progress, GameConfiguration config) { });
 				}
 			}
 			WorldGenPreviewerModWorld.continueWorldGen = true;
@@ -307,12 +312,13 @@ namespace WorldGenPreviewer
 				}
 				Main.mapFullscreenScale *= 1f + num7 * 0.3f;
 			}
+			Main.SettingDontScaleMainMenuUp = true;
 
 			Main.spriteBatch.End();
 			// TODO: Look into texture contents lost on resize issue.
 			drawToMap.Invoke(Main.instance, null); // Draw to the map texture.
 			Main.spriteBatch.Begin();
-			drawMap.Invoke(Main.instance, null); // Draws map texture to screen. Also draws Tooltips.
+			drawMap.Invoke(Main.instance, new object[] { new GameTime() }); // Draws map texture to screen. Also draws Tooltips.
 
 			//int drawX = (Main.screenWidth / 2) - playTexture.Width + 10;// 100;
 			//int drawY = 180;// Main.screenHeight - 40;

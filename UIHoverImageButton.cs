@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using System;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
@@ -9,7 +10,7 @@ namespace WorldGenPreviewer
 	{
 		internal Func<string> hoverText;
 
-		public UIHoverImageButton(Texture2D texture, Func<string> hoverText) : base(texture)
+		public UIHoverImageButton(Asset<Texture2D> texture, Func<string> hoverText) : base(texture)
 		{
 			this.hoverText = hoverText;
 		}

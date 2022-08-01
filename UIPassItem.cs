@@ -10,6 +10,9 @@ using System;
 using Terraria.GameContent.Generation;
 using System.Reflection;
 using Terraria.WorldBuilding;
+using ReLogic.Content;
+using Microsoft.Xna.Framework.Graphics;
+using Terraria.IO;
 
 namespace WorldGenPreviewer
 {
@@ -32,7 +35,7 @@ namespace WorldGenPreviewer
 			uitext.Left.Set(20, 0);
 			Append(uitext);
 
-			UIImageButton close = new UIImageButton(WorldGenPreviewer.instance.GetTexture("closeButton"));
+			UIImageButton close = new UIImageButton(WorldGenPreviewer.instance.Assets.Request<Texture2D>("closeButton", AssetRequestMode.ImmediateLoad));
 			close.OnClick += RemoveThisPass;
 			//close.Left.Set(-45, 1);
 			close.Left.Set(0, 0);
@@ -46,7 +49,7 @@ namespace WorldGenPreviewer
 			{
 				//private WorldGenLegacyMethod _method;
 				FieldInfo methodFieldInfo = typeof(PassLegacy).GetField("_method", BindingFlags.Instance | BindingFlags.NonPublic);
-				methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod) delegate (GenerationProgress progress) { });
+				methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod) delegate (GenerationProgress progress, GameConfiguration config) { });
 			}
 			UIWorldLoadSpecial.instance.passesList.Remove(this);
 		}

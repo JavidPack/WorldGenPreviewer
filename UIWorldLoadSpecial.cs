@@ -1,11 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
 using Terraria.UI;
 using Terraria.UI.Gamepad;
-using Terraria.World.Generation;
 
 using Terraria;
 using Terraria.ModLoader;
@@ -14,6 +14,7 @@ using System.IO;
 using System.Reflection;
 using Terraria.GameContent.Generation;
 using Terraria.ID;
+using Terraria.WorldBuilding;
 
 namespace WorldGenPreviewer
 {
@@ -386,9 +387,9 @@ namespace WorldGenPreviewer
 
 			int tileX = (int)((-panX + (float)Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
 			int tileY = (int)((-num2 + (float)Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
-			if (WorldGen.InWorld(tileX, tileY, 10) && Main.tile[tileX, tileY].active())
+			if (WorldGen.InWorld(tileX, tileY, 10) && Main.tile[tileX, tileY].HasTile)
 			{
-				int tileType = Main.tile[tileX, tileY].type;
+				int tileType = Main.tile[tileX, tileY].TileType;
 				string tileName = Lang._mapLegendCache.FromTile(Main.Map[tileX, tileY], tileX, tileY);
 				if (tileName == "") {
 					if (tileType < TileID.Count)
@@ -408,7 +409,7 @@ namespace WorldGenPreviewer
 			int scanX = (int)((ScanLineX - offscreenXMin) * Main.mapFullscreenScale + panX);
 			int scanY = (int)((10 - offscreenYMin) * Main.mapFullscreenScale + num2);
 			int scanHeight = (int)((Main.maxTilesY - 10) * Main.mapFullscreenScale);
-			Main.spriteBatch.Draw(Main.magicPixel, new Rectangle(scanX, scanY, 1, scanHeight), Color.LightPink);
+			Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(scanX, scanY, 1, scanHeight), Color.LightPink);
 
 			/*
 			if (WorldGenPreviewerModWorld.structures_structures != null)
@@ -440,7 +441,7 @@ namespace WorldGenPreviewer
 
 		private void UpdateGamepadSquiggle()
 		{
-			Vector2 value = new Vector2((float)Math.Cos((double)(Main.GlobalTime * 6.28318548f)), (float)Math.Sin((double)(Main.GlobalTime * 6.28318548f * 2f))) * new Vector2(30f, 15f) + Vector2.UnitY * 20f;
+			Vector2 value = new Vector2((float)Math.Cos((double)(Main.GlobalTimeWrappedHourly * 6.28318548f)), (float)Math.Sin((double)(Main.GlobalTimeWrappedHourly * 6.28318548f * 2f))) * new Vector2(30f, 15f) + Vector2.UnitY * 20f;
 			UILinkPointNavigator.Points[3000].Unlink();
 			UILinkPointNavigator.SetPosition(3000, new Vector2((float)Main.screenWidth, (float)Main.screenHeight) / 2f + value);
 		}

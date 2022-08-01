@@ -2,9 +2,9 @@
 using Terraria;
 using Terraria.GameContent.Generation;
 using System.Collections.Generic;
-using Terraria.World.Generation;
 using Microsoft.Xna.Framework;
 using System.Reflection;
+using Terraria.WorldBuilding;
 
 namespace WorldGenPreviewer
 {
@@ -23,7 +23,7 @@ namespace WorldGenPreviewer
 		}
 	}
 
-	internal class WorldGenPreviewerModWorld : ModWorld
+	internal class WorldGenPreviewerModWorld : ModSystem
 	{
 		internal static bool saveLockForced = false;
 		internal static bool continueWorldGen = true;
@@ -31,7 +31,7 @@ namespace WorldGenPreviewer
 		internal static bool repeatPreviousStep = false;
 		internal static List<GenPass> generationPasses;
 
-		public override void Initialize()
+		public override void OnWorldLoad()/* tModPorter Suggestion: Also override OnWorldUnload, and mirror your worldgen-sensitive data initialization in PreWorldGen */
 		{
 			if (saveLockForced)
 			{
@@ -53,7 +53,7 @@ namespace WorldGenPreviewer
 				{
 					progress.Message = "Setting up Special World Gen Progress";
 					Main.refreshMap = true;
-					var a = new UIWorldLoadSpecial(progress, mod);
+					var a = new UIWorldLoadSpecial(progress, Mod);
 					Main.updateMap = false;
 					Main.mapFullscreen = true;
 					Main.mapStyle = 0;

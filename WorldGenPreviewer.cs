@@ -6,6 +6,10 @@ using Microsoft.Xna.Framework;
 using System.Reflection;
 using Terraria.WorldBuilding;
 using Terraria.IO;
+using System.Threading.Tasks;
+using System.Threading;
+using System;
+using System.Collections.Concurrent;
 
 namespace WorldGenPreviewer
 {
@@ -30,8 +34,13 @@ namespace WorldGenPreviewer
 		internal static bool continueWorldGen = true;
 		internal static bool pauseAfterContinue = false;
 		internal static bool repeatPreviousStep = false;
+		internal static bool showStructures = false;
+		internal static GenPass pauseAfterPass = null;
 		internal static List<GenPass> generationPasses;
+		internal static List<Rectangle> structures_structures; // reference to WorldGen.structures._structures
+		internal static List<Rectangle> structures_protectedStructures; // reference to WorldGen.structures._protectedStructures
 
+		private static Task updateMapTask;
 
 		public override void PreWorldGen()
 		{
@@ -41,6 +50,72 @@ namespace WorldGenPreviewer
 				saveLockForced = false;
 				Main.skipMenu = false;
 	//			WorldGen.saveLock = false;
+			}
+
+			Main.loadMap = true;  // Forces first draw of map
+
+			updateMapTask = Task.Run(UpdateMap);
+
+			FieldInfo structuresField = typeof(StructureMap).GetField("_structures", BindingFlags.Instance | BindingFlags.NonPublic);
+			structures_structures = (List<Rectangle>)structuresField.GetValue(WorldGen.structures);
+
+			FieldInfo protectedStructuresField = typeof(StructureMap).GetField("_protectedStructures", BindingFlags.Instance | BindingFlags.NonPublic);
+			structures_protectedStructures = (List<Rectangle>)protectedStructuresField.GetValue(WorldGen.structures);
+
+			if (Config.Instance.StartWorldgenPaused) {
+				WorldGenPreviewerModWorld.continueWorldGen = false;
+				WorldGenPreviewerModWorld.pauseAfterContinue = false;
+				WorldGenPreviewerModWorld.pauseAfterPass = null;
+			}
+		}
+
+		internal static int ScanLineX = 0;
+		internal static bool contents = false;
+		internal static ConcurrentQueue<Point> sections = new ConcurrentQueue<Point>();
+		private void UpdateMap() {
+			sections.Clear();
+			ScanLineX = 0;
+			//Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+			int advance = (int)((1200f / Main.maxTilesY) * 300);
+
+			advance = 200; // section width instead of dynamic
+
+			while (WorldGen.generatingWorld) {
+				int start = ScanLineX;
+				int end = ScanLineX + advance;
+				for (ScanLineX = start; ScanLineX < end; ScanLineX++) {
+					for (int j = 0; j < Main.maxTilesY; j++) {
+						if (WorldGen.InWorld(ScanLineX, j) && Main.Map.UpdateType(ScanLineX, j))
+							Main.Map.Update(ScanLineX, j, 255);
+						// Draw just this update to a new buffer cleared each pass to see what each pass did?
+						// Make separate Map that is updated in tandem.
+						// drawToMap and drawToMap_Sections a swapped Main.instance.mapTarget?
+						// How will digging holes appear on map, no effect?
+					}
+				}
+
+				for (int secY = 0; secY < Main.maxTilesY / 150; secY++) {
+					sections.Enqueue(new Point(start / 200, secY));
+				}
+
+				//ScanLineX += advance;
+				if (ScanLineX >= Main.maxTilesX) {
+					ScanLineX = 0;
+				}
+
+				//for (ScanLineX = 0; ScanLineX < Main.maxTilesX; ScanLineX++) {
+				//	for (int j = 0; j < Main.maxTilesY; j++) {
+				//		if (WorldGen.InWorld(ScanLineX, j) && Main.Map.UpdateType(ScanLineX, j))
+				//			Main.Map.Update(ScanLineX, j, 255);
+				//	}
+				//}
+				contents = true;
+
+				//Thread.Sleep(100); // sleeping just makes it slower for no reason
+				if (sections.Count > 100) {
+					Thread.Sleep(1000);
+					continue;
+				}
 			}
 		}
 
@@ -94,6 +169,11 @@ namespace WorldGenPreviewer
 								break;
 							}
 						}
+						if (pauseAfterPass != null) {
+							if (pauseAfterPass == previous) {
+								continueWorldGen = false;
+							}
+						}
 						if (!continueWorldGen)
 						{
 							progress.Message = "World Gen Paused after " + name;
@@ -106,7 +186,8 @@ namespace WorldGenPreviewer
 								repeatPreviousStep = false;
 								//string previousStatus = UIWorldLoadSpecial.instance.statusLabel.SetText
 								UIWorldLoadSpecial.instance.statusLabel.SetText("Status: Doing Previous Step Again");
-								previous.Apply(progress, config);
+								previous.Apply(progress, WorldGenConfiguration.FromEmbeddedPath("Terraria.GameContent.WorldBuilding.Configuration.json").GetPassConfiguration(previous.Name));
+								// Preview: previous.Apply(progress, WorldGen.configuration.GetPassConfiguration(previous.Name));
 								//if (continueWorldGen)
 								//{
 								//	UIWorldLoadSpecial.instance.statusLabel.SetText("Status: Normal");
@@ -114,6 +195,7 @@ namespace WorldGenPreviewer
 								//else
 								//{
 								UIWorldLoadSpecial.instance.statusLabel.SetText("Status: Paused");
+								progress.Message = "World Gen Paused after " + name;
 								//}
 							}
 							if (continueWorldGen)
@@ -140,16 +222,8 @@ namespace WorldGenPreviewer
 			// reset map to original
 			Main.mapFullscreen = false;
 			Main.mapStyle = 1;
-			//structures_structures = null;
+			structures_structures = null;
+			structures_protectedStructures = null;
 		}
-
-		/* TODO: enable this via a toggle button
-		internal static List<Rectangle> structures_structures; // reference to WorldGen.structures._structures
-		public override void PreWorldGen()
-		{
-			FieldInfo structuresField = typeof(StructureMap).GetField("_structures", BindingFlags.Instance | BindingFlags.NonPublic);
-			structures_structures = (List<Rectangle>)structuresField.GetValue(WorldGen.structures);
-		}
-		*/
 	}
 }

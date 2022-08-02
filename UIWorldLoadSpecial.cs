@@ -17,6 +17,9 @@ using Terraria.ID;
 using Terraria.WorldBuilding;
 using ReLogic.Content;
 using Terraria.IO;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Diagnostics;
 
 namespace WorldGenPreviewer
 {
@@ -28,12 +31,14 @@ namespace WorldGenPreviewer
 
 		public MethodInfo drawMap;
 		public MethodInfo drawToMap;
+		public MethodInfo drawToMap_Section;
 		public FieldInfo genprogress;
 		public Asset<Texture2D> menuTexture;
 		public Asset<Texture2D> previousTexture;
 		public Asset<Texture2D> playTexture;
 		public Asset<Texture2D> pauseTexture;
 		public Asset<Texture2D> nextTexture;
+		public Asset<Texture2D> structureTexture;
 
 		public UIPanel buttonPanel;
 		public UIPanel passesPanel;
@@ -43,6 +48,7 @@ namespace WorldGenPreviewer
 		public UIImageButton playButton;
 		public UIImageButton pauseButton;
 		public UIImageButton nextButton;
+		public UIImageButton structureButton;
 		public UIImageButton cancelButton;
 		public UIText statusLabel;
 
@@ -61,12 +67,14 @@ namespace WorldGenPreviewer
 			playTexture = GetTextureForUI("play");
 			pauseTexture = GetTextureForUI("pause");
 			nextTexture = GetTextureForUI("next");
+			structureTexture = GetTextureForUI("structure");
 
 			menuButton = new UIImageButton(menuTexture);
 			previousButton = new UIImageButton(previousTexture);
 			playButton = new UIImageButton(playTexture);
 			pauseButton = new UIImageButton(pauseTexture);
 			nextButton = new UIImageButton(nextTexture);
+			structureButton = new UIImageButton(structureTexture);
 			cancelButton = new UIImageButton(GetTextureForUI("cancel"));
 
 			passesPanel = new UIPanel();
@@ -148,6 +156,12 @@ namespace WorldGenPreviewer
 			nextButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
 
+			buttonPanel.Append(structureButton);
+			structureButton.OnClick += ToggleStructure;
+			structureButton.Left.Pixels = calculatedWidth;
+			structureButton.Top.Pixels = spacing;
+			calculatedWidth += spacing + 32;
+
 			buttonPanel.Append(cancelButton);
 			cancelButton.OnClick += CancelClick;
 			cancelButton.Left.Pixels = calculatedWidth;
@@ -174,6 +188,11 @@ namespace WorldGenPreviewer
 			this._progress = progress;
 			base.Append(this._progressBar);
 			base.Append(this._progressMessage);
+		}
+
+		private void ToggleStructure(UIMouseEvent evt, UIElement listeningElement) {
+			WorldGenPreviewerModWorld.showStructures = !WorldGenPreviewerModWorld.showStructures;
+			statusLabel.SetText("Status: Structure visualization " + (WorldGenPreviewerModWorld.showStructures ? "On" : "Off"));
 		}
 
 		private void CancelClick(UIMouseEvent evt, UIElement listeningElement)
@@ -205,6 +224,7 @@ namespace WorldGenPreviewer
 			}
 			WorldGenPreviewerModWorld.continueWorldGen = true;
 			WorldGenPreviewerModWorld.pauseAfterContinue = false;
+			WorldGenPreviewerModWorld.pauseAfterPass = null;
 			statusLabel.SetText("Status: Canceling...");
 		}
 
@@ -217,6 +237,7 @@ namespace WorldGenPreviewer
 		{
 			WorldGenPreviewerModWorld.continueWorldGen = false;
 			WorldGenPreviewerModWorld.pauseAfterContinue = false;
+			WorldGenPreviewerModWorld.pauseAfterPass = null;
 			statusLabel.SetText("Status: Pausing...");
 			//Main.PlaySound(10);
 		}
@@ -226,10 +247,11 @@ namespace WorldGenPreviewer
 			//Main.PlaySound(10);
 			WorldGenPreviewerModWorld.continueWorldGen = true;
 			WorldGenPreviewerModWorld.pauseAfterContinue = false;
+			WorldGenPreviewerModWorld.pauseAfterPass = null;
 			statusLabel.SetText("Status: Normal");
 		}
 
-		bool listHidden = true;
+		bool listHidden = false;
 		private void MenuClick(UIMouseEvent evt, UIElement listeningElement)
 		{
 			//Main.PlaySound(10, -1, -1, 1);
@@ -247,6 +269,7 @@ namespace WorldGenPreviewer
 			WorldGenPreviewerModWorld.repeatPreviousStep = true;
 			WorldGenPreviewerModWorld.continueWorldGen = false;
 			WorldGenPreviewerModWorld.pauseAfterContinue = false;
+			WorldGenPreviewerModWorld.pauseAfterPass = null;
 		}
 
 		private void NextClick(UIMouseEvent evt, UIElement listeningElement)
@@ -254,6 +277,7 @@ namespace WorldGenPreviewer
 			//Main.PlaySound(10, -1, -1, 1);
 			WorldGenPreviewerModWorld.continueWorldGen = true; // so paused will break.
 			WorldGenPreviewerModWorld.pauseAfterContinue = true;
+			WorldGenPreviewerModWorld.pauseAfterPass = null;
 			statusLabel.SetText("Status: Pausing...");
 		}
 
@@ -283,6 +307,7 @@ namespace WorldGenPreviewer
 			Main.mapFullscreenScale = .25f;
 			drawMap = typeof(Main).Assembly.GetType("Terraria.Main").GetMethod("DrawMap", BindingFlags.Instance | BindingFlags.NonPublic);
 			drawToMap = typeof(Main).Assembly.GetType("Terraria.Main").GetMethod("DrawToMap", BindingFlags.Instance | BindingFlags.NonPublic);
+			drawToMap_Section = typeof(Main).Assembly.GetType("Terraria.Main").GetMethod("DrawToMap_Section", BindingFlags.Instance | BindingFlags.NonPublic);
 			genprogress = typeof(GenerationProgress).GetField("_totalProgress", BindingFlags.Instance | BindingFlags.NonPublic);
 		}
 
@@ -291,6 +316,11 @@ namespace WorldGenPreviewer
 		{
 			if (BadPass)
 				return;
+
+			Vector2 MousePosition = new Vector2((float)Main.mouseX, (float)Main.mouseY);
+			if (passesPanel.ContainsPoint(MousePosition)) {
+				Main.LocalPlayer.mouseInterface = true;
+			}
 
 			this._progressBar.SetProgress(this._progress.TotalProgress, this._progress.Value);
 			this._progressMessage.Text = this._progress.Message;
@@ -310,14 +340,33 @@ namespace WorldGenPreviewer
 				{
 					num7 += (float)(PlayerInput.Triggers.Current.HotbarPlus.ToInt() - PlayerInput.Triggers.Current.HotbarMinus.ToInt()) * 0.1f;
 				}
+				if (Main.LocalPlayer.mouseInterface)
+					num7 = 0;
 				Main.mapFullscreenScale *= 1f + num7 * 0.3f;
 			}
 			Main.SettingDontScaleMainMenuUp = true;
 
-			Main.spriteBatch.End();
-			// TODO: Look into texture contents lost on resize issue.
-			drawToMap.Invoke(Main.instance, null); // Draw to the map texture.
-			Main.spriteBatch.Begin();
+			// DrawToMap is pretty expensive, try draw only if data
+			// DrawToMap_Section might be even better, only updates some sections? Vanilla code limits to 5ms 
+			if (Main.loadMap /*|| WorldGenPreviewerModWorld.sections.Count >= 300 || WorldGenPreviewerModWorld.contents*/) {
+				WorldGenPreviewerModWorld.sections.Clear();
+				WorldGenPreviewerModWorld.contents = false;
+				Main.spriteBatch.End();
+				// TODO: Look into texture contents lost on resize issue.
+				drawToMap.Invoke(Main.instance, null); // Draw to the map texture.
+				Main.spriteBatch.Begin();
+			}
+
+			Stopwatch stopwatch2 = new Stopwatch();
+			stopwatch2.Start();
+			while (stopwatch2.ElapsedMilliseconds < 5 && WorldGenPreviewerModWorld.sections.TryDequeue(out Point section)) {
+				//			if (WorldGenPreviewerModWorld.sections.TryDequeue(out Point section)) {
+				Main.spriteBatch.End();
+				// TODO: Look into texture contents lost on resize issue.
+				drawToMap_Section.Invoke(Main.instance, new object[] { section.X, section.Y });
+				Main.spriteBatch.Begin();
+			}
+
 			drawMap.Invoke(Main.instance, new object[] { new GameTime() }); // Draws map texture to screen. Also draws Tooltips.
 
 			//int drawX = (Main.screenWidth / 2) - playTexture.Width + 10;// 100;
@@ -355,20 +404,20 @@ namespace WorldGenPreviewer
 			//for (int i = 0; i < Main.maxTilesX; i++)
 
 			// TODO: Do this in a different thread.
-			for (int i = ScanLineX; i < ScanLineX + 300; i++)
-			{
-				for (int j = 0; j < Main.maxTilesY; j++)
-				{
-					if (WorldGen.InWorld(i, j) && Main.Map.UpdateType(i, j))
-						Main.Map.Update(i, j, 255);
-				}
-			}
+			//int ScanLineX = 0;
+			//for (int i = ScanLineX; i < ScanLineX + 300; i++) {
+			//	for (int j = 0; j < Main.maxTilesY; j++) {
+			//		if (WorldGen.InWorld(i, j) && Main.Map.UpdateType(i, j))
+			//			Main.Map.Update(i, j, 255);
 			//	}
-			ScanLineX += 300;
-			if (ScanLineX > Main.maxTilesX)
-			{
-				ScanLineX = 0;
-			}
+			//}
+			////	}
+			//ScanLineX += 300;
+			//WorldGenPreviewerModWorld.contents = true;
+			//if (ScanLineX > Main.maxTilesX) {
+			//	ScanLineX = 0;
+			//}
+
 
 			// need exact coords. jerky
 			//	Main.spriteBatch.Draw(Main.magicPixel, new Vector2(((float)ScanLineX / Main.maxTilesX) * Main.screenWidth, 0), new Microsoft.Xna.Framework.Rectangle?(new Microsoft.Xna.Framework.Rectangle(0, 0, 10, 500)), Color.Green, 0f, default(Vector2), 1f, SpriteEffects.None, 0f);
@@ -412,35 +461,46 @@ namespace WorldGenPreviewer
 				}
 			}
 
-			int scanX = (int)((ScanLineX - offscreenXMin) * Main.mapFullscreenScale + panX);
+			int scanX = (int)((WorldGenPreviewerModWorld.ScanLineX - offscreenXMin) * Main.mapFullscreenScale + panX);
 			int scanY = (int)((10 - offscreenYMin) * Main.mapFullscreenScale + num2);
 			int scanHeight = (int)((Main.maxTilesY - 10) * Main.mapFullscreenScale);
 			Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(scanX, scanY, 1, scanHeight), Color.LightPink);
 
-			/*
-			if (WorldGenPreviewerModWorld.structures_structures != null)
-			{
-				for (int i = 0; i < WorldGenPreviewerModWorld.structures_structures.Count; i++)
-				{
-					Rectangle item = WorldGenPreviewerModWorld.structures_structures[i];
+			if (WorldGenPreviewerModWorld.showStructures) {
+				if (WorldGenPreviewerModWorld.structures_structures != null) {
+					for (int i = 0; i < WorldGenPreviewerModWorld.structures_structures.Count; i++) {
+						Rectangle item = WorldGenPreviewerModWorld.structures_structures[i];
 
-					//int x = (int)((-num + Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
-					//int y = (int)((-num2 + Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
-					int x = (int)((item.X - offscreenXMin) * Main.mapFullscreenScale + panX);
-					int y = (int)((item.Y - offscreenYMin) * Main.mapFullscreenScale + num2);
-					int width = (int)(item.Width * Main.mapFullscreenScale);
-					int height = (int)(item.Height * Main.mapFullscreenScale);
+						//int x = (int)((-num + Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
+						//int y = (int)((-num2 + Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
+						int x = (int)((item.X - offscreenXMin) * Main.mapFullscreenScale + panX);
+						int y = (int)((item.Y - offscreenYMin) * Main.mapFullscreenScale + num2);
+						int width = (int)(item.Width * Main.mapFullscreenScale);
+						int height = (int)(item.Height * Main.mapFullscreenScale);
 
-					// offscreenMin offsets the draw by 10 pixels
+						// offscreenMin offsets the draw by 10 pixels
 
-					Rectangle drawRectangle = new Rectangle(x, y, width, height);
-					Main.spriteBatch.Draw(Main.magicPixel, drawRectangle, Color.Green * 0.6f);
+						Rectangle drawRectangle = new Rectangle(x, y, width, height);
+						Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, drawRectangle, Color.Green * 0.6f);
+					}
+				}
+				if (WorldGenPreviewerModWorld.structures_protectedStructures != null) {
+					for (int i = 0; i < WorldGenPreviewerModWorld.structures_protectedStructures.Count; i++) {
+						Rectangle item = WorldGenPreviewerModWorld.structures_protectedStructures[i];
+
+						int x = (int)((item.X - offscreenXMin) * Main.mapFullscreenScale + panX);
+						int y = (int)((item.Y - offscreenYMin) * Main.mapFullscreenScale + num2);
+						int width = (int)(item.Width * Main.mapFullscreenScale);
+						int height = (int)(item.Height * Main.mapFullscreenScale);
+
+						Rectangle drawRectangle = new Rectangle(x, y, width, height);
+						Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, drawRectangle, Color.Red * 0.6f);
+					}
 				}
 			}
-			*/
 		}
 		//float oldTotalProgress = -1f;
-		int ScanLineX = 0;
+		//int ScanLineX = 0;
 
 		//float scanprogress = -1f;
 

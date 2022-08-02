@@ -33,6 +33,7 @@ namespace WorldGenPreviewer
 
 			uitext = new UIText(text, textScale, large);
 			uitext.Left.Set(20, 0);
+			uitext.OnClick += StopAfterThisPass;
 			Append(uitext);
 
 			UIImageButton close = new UIImageButton(WorldGenPreviewer.instance.Assets.Request<Texture2D>("closeButton", AssetRequestMode.ImmediateLoad));
@@ -40,6 +41,15 @@ namespace WorldGenPreviewer
 			//close.Left.Set(-45, 1);
 			close.Left.Set(0, 0);
 			Append(close);
+		}
+
+		private void StopAfterThisPass(UIMouseEvent evt, UIElement listeningElement) {
+			if (!complete) {
+				WorldGenPreviewerModWorld.continueWorldGen = true;
+				WorldGenPreviewerModWorld.pauseAfterContinue = false;
+				WorldGenPreviewerModWorld.pauseAfterPass = pass;
+				UIWorldLoadSpecial.instance.statusLabel.SetText($"Status: Pausing after {pass.Name}");
+			}
 		}
 
 		private void RemoveThisPass(UIMouseEvent evt, UIElement listeningElement)
@@ -65,6 +75,13 @@ namespace WorldGenPreviewer
 		{
 			UIPassItem other = obj as UIPassItem;
 			return order.CompareTo(other.order);
+		}
+
+		protected override void DrawSelf(SpriteBatch spriteBatch) {
+			base.DrawSelf(spriteBatch);
+			if (IsMouseHovering) {
+				UIWorldLoadSpecial.instance.statusLabel.SetText("Click to advance to " + pass.Name);
+			}
 		}
 	}
 }

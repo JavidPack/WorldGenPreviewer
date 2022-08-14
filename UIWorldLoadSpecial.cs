@@ -344,7 +344,6 @@ namespace WorldGenPreviewer
 					num7 = 0;
 				Main.mapFullscreenScale *= 1f + num7 * 0.3f;
 			}
-			Main.SettingDontScaleMainMenuUp = true;
 
 			// DrawToMap is pretty expensive, try draw only if data
 			// DrawToMap_Section might be even better, only updates some sections? Vanilla code limits to 5ms 
@@ -367,7 +366,12 @@ namespace WorldGenPreviewer
 				Main.spriteBatch.Begin();
 			}
 
-			drawMap.Invoke(Main.instance, new object[] { new GameTime() }); // Draws map texture to screen. Also draws Tooltips.
+			// DrawMap needs unscaled zoom
+			PlayerInput.SetZoom_Unscaled();
+			Main.spriteBatch.End();
+			Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.Transform);
+
+			drawMap.Invoke(Main.instance, new object[] { new GameTime() }); // Draws map texture to screen. Also draws Tooltips. Also draws cursor.
 
 			//int drawX = (Main.screenWidth / 2) - playTexture.Width + 10;// 100;
 			//int drawY = 180;// Main.screenHeight - 40;
@@ -498,6 +502,11 @@ namespace WorldGenPreviewer
 					}
 				}
 			}
+
+			Main.spriteBatch.End();
+			// Restore UI Zoom for drawing other elements
+			PlayerInput.SetZoom_UI();
+			Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.UIScaleMatrix);
 		}
 		//float oldTotalProgress = -1f;
 		//int ScanLineX = 0;

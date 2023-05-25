@@ -75,10 +75,10 @@ namespace WorldGenPreviewer
 			updateMapTask = Task.Run(UpdateMap);
 
 			FieldInfo structuresField = typeof(StructureMap).GetField("_structures", BindingFlags.Instance | BindingFlags.NonPublic);
-			structures_structures = (List<Rectangle>)structuresField.GetValue(WorldGen.structures);
+			structures_structures = (List<Rectangle>)structuresField.GetValue(GenVars.structures);
 
 			FieldInfo protectedStructuresField = typeof(StructureMap).GetField("_protectedStructures", BindingFlags.Instance | BindingFlags.NonPublic);
-			structures_protectedStructures = (List<Rectangle>)protectedStructuresField.GetValue(WorldGen.structures);
+			structures_protectedStructures = (List<Rectangle>)protectedStructuresField.GetValue(GenVars.structures);
 
 			if (Config.Instance.StartWorldgenPaused) {
 				WorldGenPreviewerModWorld.continueWorldGen = false;
@@ -137,7 +137,7 @@ namespace WorldGenPreviewer
 			}
 		}
 
-		public override void ModifyWorldGenTasks(List<GenPass> tasks, ref float totalWeight)
+		public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
 		{
 			generationPasses = tasks;
 			// Reset Terrain

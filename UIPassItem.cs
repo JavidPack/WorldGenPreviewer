@@ -33,11 +33,11 @@ namespace WorldGenPreviewer
 
 			uitext = new UIText(text, textScale, large);
 			uitext.Left.Set(20, 0);
-			uitext.OnClick += StopAfterThisPass;
+			uitext.OnLeftClick += StopAfterThisPass;
 			Append(uitext);
 
 			UIImageButton close = new UIImageButton(WorldGenPreviewer.instance.Assets.Request<Texture2D>("closeButton", AssetRequestMode.ImmediateLoad));
-			close.OnClick += RemoveThisPass;
+			close.OnLeftClick += RemoveThisPass;
 			//close.Left.Set(-45, 1);
 			close.Left.Set(0, 0);
 			Append(close);

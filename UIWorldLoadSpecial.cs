@@ -127,43 +127,43 @@ namespace WorldGenPreviewer
 			float calculatedWidth = spacing;
 
 			buttonPanel.Append(menuButton);
-			menuButton.OnClick += MenuClick;
+			menuButton.OnLeftClick += MenuClick;
 			menuButton.Left.Pixels = calculatedWidth;
 			menuButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
 
 			buttonPanel.Append(previousButton);
-			previousButton.OnClick += PreviousClick;
+			previousButton.OnLeftClick += PreviousClick;
 			previousButton.Left.Pixels = calculatedWidth;
 			previousButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
 
 			buttonPanel.Append(playButton);
-			playButton.OnClick += PlayClick;
+			playButton.OnLeftClick += PlayClick;
 			playButton.Left.Pixels = calculatedWidth;
 			playButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
 
 			buttonPanel.Append(pauseButton);
-			pauseButton.OnClick += PauseClick;
+			pauseButton.OnLeftClick += PauseClick;
 			pauseButton.Left.Pixels = calculatedWidth;
 			pauseButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
 
 			buttonPanel.Append(nextButton);
-			nextButton.OnClick += NextClick;
+			nextButton.OnLeftClick += NextClick;
 			nextButton.Left.Pixels = calculatedWidth;
 			nextButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
 
 			buttonPanel.Append(structureButton);
-			structureButton.OnClick += ToggleStructure;
+			structureButton.OnLeftClick += ToggleStructure;
 			structureButton.Left.Pixels = calculatedWidth;
 			structureButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
 
 			buttonPanel.Append(cancelButton);
-			cancelButton.OnClick += CancelClick;
+			cancelButton.OnLeftClick += CancelClick;
 			cancelButton.Left.Pixels = calculatedWidth;
 			cancelButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
@@ -322,7 +322,7 @@ namespace WorldGenPreviewer
 				Main.LocalPlayer.mouseInterface = true;
 			}
 
-			this._progressBar.SetProgress(this._progress.TotalProgress, this._progress.Value);
+			this._progressBar.SetProgress((float)this._progress.TotalProgress, (float)this._progress.Value);
 			this._progressMessage.Text = this._progress.Message;
 			this.UpdateGamepadSquiggle();
 

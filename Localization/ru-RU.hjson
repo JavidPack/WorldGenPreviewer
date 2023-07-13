@@ -1,0 +1,18 @@
+Mods: {
+	WorldGenPreviewer: {
+		Configs: {
+			Config: {
+				StartWorldgenPaused: {
+					/* Tooltip:
+						'''
+						Start Worldgen Paused
+						Useful if you need to skip or repeat an early world generation pass.
+						''' */
+					// Label: Start Worldgen Paused
+				}
+
+				// DisplayName: Config
+			}
+		}
+	}
+}

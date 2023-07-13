@@ -1,4 +1,6 @@
-﻿This mod changes the world generation screen to include a preview of the map as it generates. You can also pause, resume, repeat, skip, or cancel generation as you like.
+﻿[img]https://i.imgur.com/W2c5CX6.gif[/img]
+
+This mod changes the world generation screen to include a preview of the map as it generates. You can also pause, resume, repeat, skip, or cancel generation as you like.
 
 For example, you can repeat the dungeon step to generate multiple dungeons. If you don't like how a world is looking, simply click cancel and you can start over.
 

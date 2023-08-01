@@ -1,5 +1,5 @@
 ﻿author = jopojelly
-version = 0.7.0.1
+version = 0.7.0.2
 displayName = WorldGen Previewer
 side = Client
 homepage = http://forums.terraria.org/index.php?threads/worldgen-previewer.49753/

@@ -100,9 +100,9 @@ namespace WorldGenPreviewer
 			passesList.SetScrollbar(passesListScrollbar);
 
 			int order = 0;
-			for (int i = 0; i < WorldGenPreviewerModWorld.generationPasses.Count; i++)
+			for (int i = 0; i < WorldGenPreviewerModSystem.generationPasses.Count; i++)
 			{
-				GenPass pass = WorldGenPreviewerModWorld.generationPasses[i];
+				GenPass pass = WorldGenPreviewerModSystem.generationPasses[i];
 				if (pass.Name != "World Gen Paused")
 				{
 					order++;
@@ -191,8 +191,8 @@ namespace WorldGenPreviewer
 		}
 
 		private void ToggleStructure(UIMouseEvent evt, UIElement listeningElement) {
-			WorldGenPreviewerModWorld.showStructures = !WorldGenPreviewerModWorld.showStructures;
-			statusLabel.SetText("Status: Structure visualization " + (WorldGenPreviewerModWorld.showStructures ? "On" : "Off"));
+			WorldGenPreviewerModSystem.showStructures = !WorldGenPreviewerModSystem.showStructures;
+			statusLabel.SetText("Status: Structure visualization " + (WorldGenPreviewerModSystem.showStructures ? "On" : "Off"));
 		}
 
 		private void CancelClick(UIMouseEvent evt, UIElement listeningElement)
@@ -207,7 +207,7 @@ namespace WorldGenPreviewer
 			//passesFieldInfo.SetValue(_generator, null);
 
 			// saveLock prevents save, but needs to be restored to false.
-			WorldGenPreviewerModWorld.saveLockForced = true;
+			WorldGenPreviewerModSystem.saveLockForced = true;
 			Main.skipMenu = true;
 	//		WorldGen.saveLock = true;
 			FieldInfo methodFieldInfo = typeof(PassLegacy).GetField("_method", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -222,9 +222,9 @@ namespace WorldGenPreviewer
 					methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod)delegate (GenerationProgress progress, GameConfiguration config) { });
 				}
 			}
-			WorldGenPreviewerModWorld.continueWorldGen = true;
-			WorldGenPreviewerModWorld.pauseAfterContinue = false;
-			WorldGenPreviewerModWorld.pauseAfterPass = null;
+			WorldGenPreviewerModSystem.continueWorldGen = true;
+			WorldGenPreviewerModSystem.pauseAfterContinue = false;
+			WorldGenPreviewerModSystem.pauseAfterPass = null;
 			statusLabel.SetText("Status: Canceling...");
 		}
 
@@ -235,9 +235,9 @@ namespace WorldGenPreviewer
 
 		private void PauseClick(UIMouseEvent evt, UIElement listeningElement)
 		{
-			WorldGenPreviewerModWorld.continueWorldGen = false;
-			WorldGenPreviewerModWorld.pauseAfterContinue = false;
-			WorldGenPreviewerModWorld.pauseAfterPass = null;
+			WorldGenPreviewerModSystem.continueWorldGen = false;
+			WorldGenPreviewerModSystem.pauseAfterContinue = false;
+			WorldGenPreviewerModSystem.pauseAfterPass = null;
 			statusLabel.SetText("Status: Pausing...");
 			//Main.PlaySound(10);
 		}
@@ -245,9 +245,9 @@ namespace WorldGenPreviewer
 		private void PlayClick(UIMouseEvent evt, UIElement listeningElement)
 		{
 			//Main.PlaySound(10);
-			WorldGenPreviewerModWorld.continueWorldGen = true;
-			WorldGenPreviewerModWorld.pauseAfterContinue = false;
-			WorldGenPreviewerModWorld.pauseAfterPass = null;
+			WorldGenPreviewerModSystem.continueWorldGen = true;
+			WorldGenPreviewerModSystem.pauseAfterContinue = false;
+			WorldGenPreviewerModSystem.pauseAfterPass = null;
 			statusLabel.SetText("Status: Normal");
 		}
 
@@ -266,18 +266,18 @@ namespace WorldGenPreviewer
 		{
 			//Main.PlaySound(10, -1, -1, 1);
 			statusLabel.SetText("Status: Waiting to do this step again...");
-			WorldGenPreviewerModWorld.repeatPreviousStep = true;
-			WorldGenPreviewerModWorld.continueWorldGen = false;
-			WorldGenPreviewerModWorld.pauseAfterContinue = false;
-			WorldGenPreviewerModWorld.pauseAfterPass = null;
+			WorldGenPreviewerModSystem.repeatPreviousStep = true;
+			WorldGenPreviewerModSystem.continueWorldGen = false;
+			WorldGenPreviewerModSystem.pauseAfterContinue = false;
+			WorldGenPreviewerModSystem.pauseAfterPass = null;
 		}
 
 		private void NextClick(UIMouseEvent evt, UIElement listeningElement)
 		{
 			//Main.PlaySound(10, -1, -1, 1);
-			WorldGenPreviewerModWorld.continueWorldGen = true; // so paused will break.
-			WorldGenPreviewerModWorld.pauseAfterContinue = true;
-			WorldGenPreviewerModWorld.pauseAfterPass = null;
+			WorldGenPreviewerModSystem.continueWorldGen = true; // so paused will break.
+			WorldGenPreviewerModSystem.pauseAfterContinue = true;
+			WorldGenPreviewerModSystem.pauseAfterPass = null;
 			statusLabel.SetText("Status: Pausing...");
 		}
 
@@ -348,8 +348,8 @@ namespace WorldGenPreviewer
 			// DrawToMap is pretty expensive, try draw only if data
 			// DrawToMap_Section might be even better, only updates some sections? Vanilla code limits to 5ms 
 			if (Main.loadMap /*|| WorldGenPreviewerModWorld.sections.Count >= 300 || WorldGenPreviewerModWorld.contents*/) {
-				WorldGenPreviewerModWorld.sections.Clear();
-				WorldGenPreviewerModWorld.contents = false;
+				WorldGenPreviewerModSystem.sections.Clear();
+				WorldGenPreviewerModSystem.contents = false;
 				Main.spriteBatch.End();
 				// TODO: Look into texture contents lost on resize issue.
 				drawToMap.Invoke(Main.instance, null); // Draw to the map texture.
@@ -358,7 +358,7 @@ namespace WorldGenPreviewer
 
 			Stopwatch stopwatch2 = new Stopwatch();
 			stopwatch2.Start();
-			while (stopwatch2.ElapsedMilliseconds < 5 && WorldGenPreviewerModWorld.sections.TryDequeue(out Point section)) {
+			while (stopwatch2.ElapsedMilliseconds < 5 && WorldGenPreviewerModSystem.sections.TryDequeue(out Point section)) {
 				//			if (WorldGenPreviewerModWorld.sections.TryDequeue(out Point section)) {
 				Main.spriteBatch.End();
 				// TODO: Look into texture contents lost on resize issue.
@@ -465,15 +465,15 @@ namespace WorldGenPreviewer
 				}
 			}
 
-			int scanX = (int)((WorldGenPreviewerModWorld.ScanLineX - offscreenXMin) * Main.mapFullscreenScale + panX);
+			int scanX = (int)((WorldGenPreviewerModSystem.ScanLineX - offscreenXMin) * Main.mapFullscreenScale + panX);
 			int scanY = (int)((10 - offscreenYMin) * Main.mapFullscreenScale + num2);
 			int scanHeight = (int)((Main.maxTilesY - 10) * Main.mapFullscreenScale);
 			Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(scanX, scanY, 1, scanHeight), Color.LightPink);
 
-			if (WorldGenPreviewerModWorld.showStructures) {
-				if (WorldGenPreviewerModWorld.structures_structures != null) {
-					for (int i = 0; i < WorldGenPreviewerModWorld.structures_structures.Count; i++) {
-						Rectangle item = WorldGenPreviewerModWorld.structures_structures[i];
+			if (WorldGenPreviewerModSystem.showStructures) {
+				if (WorldGenPreviewerModSystem.structures_structures != null) {
+					for (int i = 0; i < WorldGenPreviewerModSystem.structures_structures.Count; i++) {
+						Rectangle item = WorldGenPreviewerModSystem.structures_structures[i];
 
 						//int x = (int)((-num + Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
 						//int y = (int)((-num2 + Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
@@ -488,9 +488,9 @@ namespace WorldGenPreviewer
 						Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, drawRectangle, Color.Green * 0.6f);
 					}
 				}
-				if (WorldGenPreviewerModWorld.structures_protectedStructures != null) {
-					for (int i = 0; i < WorldGenPreviewerModWorld.structures_protectedStructures.Count; i++) {
-						Rectangle item = WorldGenPreviewerModWorld.structures_protectedStructures[i];
+				if (WorldGenPreviewerModSystem.structures_protectedStructures != null) {
+					for (int i = 0; i < WorldGenPreviewerModSystem.structures_protectedStructures.Count; i++) {
+						Rectangle item = WorldGenPreviewerModSystem.structures_protectedStructures[i];
 
 						int x = (int)((item.X - offscreenXMin) * Main.mapFullscreenScale + panX);
 						int y = (int)((item.Y - offscreenYMin) * Main.mapFullscreenScale + num2);

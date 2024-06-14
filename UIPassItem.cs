@@ -45,9 +45,9 @@ namespace WorldGenPreviewer
 
 		private void StopAfterThisPass(UIMouseEvent evt, UIElement listeningElement) {
 			if (!complete) {
-				WorldGenPreviewerModWorld.continueWorldGen = true;
-				WorldGenPreviewerModWorld.pauseAfterContinue = false;
-				WorldGenPreviewerModWorld.pauseAfterPass = pass;
+				WorldGenPreviewerModSystem.continueWorldGen = true;
+				WorldGenPreviewerModSystem.pauseAfterContinue = false;
+				WorldGenPreviewerModSystem.pauseAfterPass = pass;
 				UIWorldLoadSpecial.instance.statusLabel.SetText($"Status: Pausing after {pass.Name}");
 			}
 		}

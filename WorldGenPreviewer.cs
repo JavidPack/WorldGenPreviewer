@@ -12,6 +12,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace WorldGenPreviewer
 {
@@ -60,6 +61,12 @@ namespace WorldGenPreviewer
 
 		private static Task updateMapTask;
 
+		[UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_structures")]
+		extern static ref List<Rectangle> StructureMap_structures(StructureMap c);
+
+		[UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_protectedStructures")]
+		extern static ref List<Rectangle> StructureMap_protectedStructures(StructureMap c);
+
 		public override void PreWorldGen()
 		{
 			// replace with Monitor.TryEnter(IOLock)?
@@ -74,11 +81,15 @@ namespace WorldGenPreviewer
 
 			updateMapTask = Task.Run(UpdateMap);
 
+			/*
 			FieldInfo structuresField = typeof(StructureMap).GetField("_structures", BindingFlags.Instance | BindingFlags.NonPublic);
 			structures_structures = (List<Rectangle>)structuresField.GetValue(GenVars.structures);
 
 			FieldInfo protectedStructuresField = typeof(StructureMap).GetField("_protectedStructures", BindingFlags.Instance | BindingFlags.NonPublic);
 			structures_protectedStructures = (List<Rectangle>)protectedStructuresField.GetValue(GenVars.structures);
+			*/
+			structures_structures = StructureMap_structures(GenVars.structures);
+			structures_protectedStructures = StructureMap_protectedStructures(GenVars.structures);
 
 			if (Config.Instance.StartWorldgenPaused) {
 				WorldGenPreviewerModWorld.continueWorldGen = false;

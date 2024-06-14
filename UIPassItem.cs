@@ -1,18 +1,12 @@
-﻿using Terraria.GameContent.UI.Elements;
-using Terraria.GameInput;
-using Terraria.UI;
-using Terraria.UI.Gamepad;
-
-using Terraria;
-using Terraria.ModLoader;
-using Microsoft.Xna.Framework;
-using System;
-using Terraria.GameContent.Generation;
-using System.Reflection;
-using Terraria.WorldBuilding;
-using ReLogic.Content;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using System.Reflection;
+using Terraria.GameContent.Generation;
+using Terraria.GameContent.UI.Elements;
 using Terraria.IO;
+using Terraria.UI;
+using Terraria.WorldBuilding;
 
 namespace WorldGenPreviewer
 {
@@ -22,8 +16,7 @@ namespace WorldGenPreviewer
 		bool complete = false;
 		public GenPass pass;
 		UIText uitext;
-		public UIPassItem(int order, GenPass pass, string text, float textScale = 1, bool large = false)
-		{
+		public UIPassItem(int order, GenPass pass, string text, float textScale = 1, bool large = false) {
 			this.pass = pass;
 			this.order = order;
 			//TextColor = Color.Blue;
@@ -52,27 +45,23 @@ namespace WorldGenPreviewer
 			}
 		}
 
-		private void RemoveThisPass(UIMouseEvent evt, UIElement listeningElement)
-		{
+		private void RemoveThisPass(UIMouseEvent evt, UIElement listeningElement) {
 			PassLegacy passLegacy = pass as PassLegacy;
-			if (passLegacy != null)
-			{
+			if (passLegacy != null) {
 				//private WorldGenLegacyMethod _method;
 				FieldInfo methodFieldInfo = typeof(PassLegacy).GetField("_method", BindingFlags.Instance | BindingFlags.NonPublic);
-				methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod) delegate (GenerationProgress progress, GameConfiguration config) { });
+				methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod)delegate (GenerationProgress progress, GameConfiguration config) { });
 			}
 			UIWorldLoadSpecial.instance.passesList.Remove(this);
 		}
 
-		public void Complete()
-		{
+		public void Complete() {
 			complete = true;
 			uitext.TextColor = Color.Red;
 			//Recalculate();
 		}
 
-		public override int CompareTo(object obj)
-		{
+		public override int CompareTo(object obj) {
 			UIPassItem other = obj as UIPassItem;
 			return order.CompareTo(other.order);
 		}

@@ -1,25 +1,20 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using System;
+using System.Diagnostics;
+using System.Reflection;
+using Terraria;
 using Terraria.GameContent;
+using Terraria.GameContent.Generation;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
+using Terraria.ID;
+using Terraria.IO;
+using Terraria.ModLoader;
 using Terraria.UI;
 using Terraria.UI.Gamepad;
-
-using Terraria;
-using Terraria.ModLoader;
-using Terraria.Map;
-using System.IO;
-using System.Reflection;
-using Terraria.GameContent.Generation;
-using Terraria.ID;
 using Terraria.WorldBuilding;
-using ReLogic.Content;
-using Terraria.IO;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Diagnostics;
 
 namespace WorldGenPreviewer
 {
@@ -57,8 +52,7 @@ namespace WorldGenPreviewer
 		float spacing = 8f;
 		const float panelWidth = 230;
 
-		public UIWorldLoadSpecial(GenerationProgress progress, Mod mod)
-		{
+		public UIWorldLoadSpecial(GenerationProgress progress, Mod mod) {
 			Asset<Texture2D> GetTextureForUI(string assetName) => mod.Assets.Request<Texture2D>(assetName, AssetRequestMode.ImmediateLoad);
 
 			instance = this;
@@ -100,11 +94,9 @@ namespace WorldGenPreviewer
 			passesList.SetScrollbar(passesListScrollbar);
 
 			int order = 0;
-			for (int i = 0; i < WorldGenPreviewerModSystem.generationPasses.Count; i++)
-			{
+			for (int i = 0; i < WorldGenPreviewerModSystem.generationPasses.Count; i++) {
 				GenPass pass = WorldGenPreviewerModSystem.generationPasses[i];
-				if (pass.Name != "World Gen Paused")
-				{
+				if (pass.Name != "World Gen Paused") {
 					order++;
 					UIPassItem testLabel = new UIPassItem(order, pass, pass.Name, 1f, false);
 					//testLabel.Top.Pixels = y;
@@ -195,8 +187,7 @@ namespace WorldGenPreviewer
 			statusLabel.SetText("Status: Structure visualization " + (WorldGenPreviewerModSystem.showStructures ? "On" : "Off"));
 		}
 
-		private void CancelClick(UIMouseEvent evt, UIElement listeningElement)
-		{
+		private void CancelClick(UIMouseEvent evt, UIElement listeningElement) {
 			// This approach left the world gen continuing in the other thread, corrupting subsequent world gen attempts
 			//throw new Exception("WorldGenPreviewer: User canceled World Gen\n");
 
@@ -209,16 +200,14 @@ namespace WorldGenPreviewer
 			// saveLock prevents save, but needs to be restored to false.
 			WorldGenPreviewerModSystem.saveLockForced = true;
 			Main.skipMenu = true;
-	//		WorldGen.saveLock = true;
+			// WorldGen.saveLock = true;
 			FieldInfo methodFieldInfo = typeof(PassLegacy).GetField("_method", BindingFlags.Instance | BindingFlags.NonPublic);
 			// This method still can't cancel infinite loops in passes. This can't be avoided. We could try forcing an exception on the world gen thread like `Main.tile = null`, but we'd have to restore the reference somehow.
-			foreach (var item in passesList._items)
-			{
+			foreach (var item in passesList._items) {
 				UIPassItem passitem = item as UIPassItem;
 
 				PassLegacy passLegacy = passitem.pass as PassLegacy;
-				if (passLegacy != null)
-				{
+				if (passLegacy != null) {
 					methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod)delegate (GenerationProgress progress, GameConfiguration config) { });
 				}
 			}
@@ -228,13 +217,11 @@ namespace WorldGenPreviewer
 			statusLabel.SetText("Status: Canceling...");
 		}
 
-		public int SortMethod2(UIElement item1, UIElement item2)
-		{
+		public int SortMethod2(UIElement item1, UIElement item2) {
 			return item1.CompareTo(item2);
 		}
 
-		private void PauseClick(UIMouseEvent evt, UIElement listeningElement)
-		{
+		private void PauseClick(UIMouseEvent evt, UIElement listeningElement) {
 			WorldGenPreviewerModSystem.continueWorldGen = false;
 			WorldGenPreviewerModSystem.pauseAfterContinue = false;
 			WorldGenPreviewerModSystem.pauseAfterPass = null;
@@ -242,8 +229,7 @@ namespace WorldGenPreviewer
 			//Main.PlaySound(10);
 		}
 
-		private void PlayClick(UIMouseEvent evt, UIElement listeningElement)
-		{
+		private void PlayClick(UIMouseEvent evt, UIElement listeningElement) {
 			//Main.PlaySound(10);
 			WorldGenPreviewerModSystem.continueWorldGen = true;
 			WorldGenPreviewerModSystem.pauseAfterContinue = false;
@@ -252,8 +238,7 @@ namespace WorldGenPreviewer
 		}
 
 		bool listHidden = false;
-		private void MenuClick(UIMouseEvent evt, UIElement listeningElement)
-		{
+		private void MenuClick(UIMouseEvent evt, UIElement listeningElement) {
 			//Main.PlaySound(10, -1, -1, 1);
 			//ErrorLogger.Log("MENU");
 			//statusLabel.SetText("Status: ??...");
@@ -262,8 +247,7 @@ namespace WorldGenPreviewer
 			passesPanel.Recalculate();
 		}
 
-		private void PreviousClick(UIMouseEvent evt, UIElement listeningElement)
-		{
+		private void PreviousClick(UIMouseEvent evt, UIElement listeningElement) {
 			//Main.PlaySound(10, -1, -1, 1);
 			statusLabel.SetText("Status: Waiting to do this step again...");
 			WorldGenPreviewerModSystem.repeatPreviousStep = true;
@@ -272,8 +256,7 @@ namespace WorldGenPreviewer
 			WorldGenPreviewerModSystem.pauseAfterPass = null;
 		}
 
-		private void NextClick(UIMouseEvent evt, UIElement listeningElement)
-		{
+		private void NextClick(UIMouseEvent evt, UIElement listeningElement) {
 			//Main.PlaySound(10, -1, -1, 1);
 			WorldGenPreviewerModSystem.continueWorldGen = true; // so paused will break.
 			WorldGenPreviewerModSystem.pauseAfterContinue = true;
@@ -296,10 +279,8 @@ namespace WorldGenPreviewer
 		//          this.buttonView.Width = base.Width;
 		//      }
 
-		public override void OnActivate()
-		{
-			if (PlayerInput.UsingGamepadUI)
-			{
+		public override void OnActivate() {
+			if (PlayerInput.UsingGamepadUI) {
 				UILinkPointNavigator.Points[3000].Unlink();
 				UILinkPointNavigator.ChangePoint(3000);
 			}
@@ -312,8 +293,7 @@ namespace WorldGenPreviewer
 		}
 
 		internal static bool BadPass;
-		protected override void DrawSelf(SpriteBatch spriteBatch)
-		{
+		protected override void DrawSelf(SpriteBatch spriteBatch) {
 			if (BadPass)
 				return;
 
@@ -333,11 +313,9 @@ namespace WorldGenPreviewer
 			Main.mapMaxY = Main.maxTilesY;
 
 			// Zoom functionality.
-			if (Main.mapFullscreen)
-			{
+			if (Main.mapFullscreen) {
 				float num7 = (float)(PlayerInput.ScrollWheelDelta / 120);
-				if (PlayerInput.UsingGamepad)
-				{
+				if (PlayerInput.UsingGamepad) {
 					num7 += (float)(PlayerInput.Triggers.Current.HotbarPlus.ToInt() - PlayerInput.Triggers.Current.HotbarMinus.ToInt()) * 0.1f;
 				}
 				if (Main.LocalPlayer.mouseInterface)
@@ -446,8 +424,7 @@ namespace WorldGenPreviewer
 
 			int tileX = (int)((-panX + (float)Main.mouseX) / Main.mapFullscreenScale + offscreenXMin);
 			int tileY = (int)((-num2 + (float)Main.mouseY) / Main.mapFullscreenScale + offscreenYMin);
-			if (WorldGen.InWorld(tileX, tileY, 10) && Main.tile[tileX, tileY].HasTile)
-			{
+			if (WorldGen.InWorld(tileX, tileY, 10) && Main.tile[tileX, tileY].HasTile) {
 				int tileType = Main.tile[tileX, tileY].TileType;
 				string tileName = Lang._mapLegendCache.FromTile(Main.Map[tileX, tileY], tileX, tileY);
 				if (tileName == "") {
@@ -457,8 +434,7 @@ namespace WorldGenPreviewer
 						tileName = TileLoader.GetTile(tileType).Name;
 				}
 				statusLabel.SetText($"Tile: {tileName}");
-				if (Main.mouseRight && Main.mouseRightRelease)
-				{
+				if (Main.mouseRight && Main.mouseRightRelease) {
 					//	WorldGen.ShroomPatch(tileX, tileY);
 					//	WorldGen.MakeDungeon(tileX, tileY);
 					//	WorldGen.GrowTree(tileX, tileY);
@@ -514,15 +490,13 @@ namespace WorldGenPreviewer
 		//float scanprogress = -1f;
 
 
-		private void UpdateGamepadSquiggle()
-		{
+		private void UpdateGamepadSquiggle() {
 			Vector2 value = new Vector2((float)Math.Cos((double)(Main.GlobalTimeWrappedHourly * 6.28318548f)), (float)Math.Sin((double)(Main.GlobalTimeWrappedHourly * 6.28318548f * 2f))) * new Vector2(30f, 15f) + Vector2.UnitY * 20f;
 			UILinkPointNavigator.Points[3000].Unlink();
 			UILinkPointNavigator.SetPosition(3000, new Vector2((float)Main.screenWidth, (float)Main.screenHeight) / 2f + value);
 		}
 
-		public string GetStatusText()
-		{
+		public string GetStatusText() {
 			return string.Format("{0:0.0%} - " + this._progress.Message + " - {1:0.0%}", this._progress.TotalProgress, this._progress.Value);
 		}
 	}

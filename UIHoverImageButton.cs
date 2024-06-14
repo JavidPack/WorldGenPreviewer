@@ -10,16 +10,13 @@ namespace WorldGenPreviewer
 	{
 		internal Func<string> hoverText;
 
-		public UIHoverImageButton(Asset<Texture2D> texture, Func<string> hoverText) : base(texture)
-		{
+		public UIHoverImageButton(Asset<Texture2D> texture, Func<string> hoverText) : base(texture) {
 			this.hoverText = hoverText;
 		}
 
-		protected override void DrawSelf(SpriteBatch spriteBatch)
-		{
+		protected override void DrawSelf(SpriteBatch spriteBatch) {
 			base.DrawSelf(spriteBatch);
-			if (IsMouseHovering)
-			{
+			if (IsMouseHovering) {
 				Main.hoverItemName = hoverText();
 			}
 		}

@@ -6,12 +6,11 @@ using System.Diagnostics;
 using System.Reflection;
 using Terraria;
 using Terraria.GameContent;
-using Terraria.GameContent.Generation;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
 using Terraria.ID;
-using Terraria.IO;
 using Terraria.ModLoader;
+using Terraria.ModLoader.UI;
 using Terraria.UI;
 using Terraria.UI.Gamepad;
 using Terraria.WorldBuilding;
@@ -37,7 +36,7 @@ namespace WorldGenPreviewer
 
 		public UIPanel buttonPanel;
 		public UIPanel passesPanel;
-		public UIList passesList;
+		public UIList passesList; // index matches WorldGenPreviewerModSystem.generationPasses
 		public UIImageButton menuButton;
 		public UIImageButton previousButton;
 		public UIImageButton playButton;
@@ -93,26 +92,17 @@ namespace WorldGenPreviewer
 			passesPanel.Append(passesListScrollbar);
 			passesList.SetScrollbar(passesListScrollbar);
 
-			int order = 0;
 			for (int i = 0; i < WorldGenPreviewerModSystem.generationPasses.Count; i++) {
 				GenPass pass = WorldGenPreviewerModSystem.generationPasses[i];
-				if (pass.Name != "World Gen Paused") {
-					order++;
-					UIPassItem testLabel = new UIPassItem(order, pass, pass.Name, 1f, false);
-					//testLabel.Top.Pixels = y;
-					//y += 10;
-					passesList.Add(testLabel);
-					//passesPanel.Append(testLabel);
-				}
+				UIPassItem testLabel = new UIPassItem(i, pass, pass.Name, 1f, false);
+				passesList.Add(testLabel);
 			}
 			Append(passesPanel);
 
 			buttonPanel = new UIPanel();
 			buttonPanel.SetPadding(0);
-			//buttonPanel.Left.Set(0f, .5f);
 			buttonPanel.HAlign = 0.5f;
 			buttonPanel.Top.Set(180f, 0f);
-			//buttonPanel.Width.Set(170f, 0f);
 			buttonPanel.Height.Set(32 + spacing * 2 + 16, 0f);
 			buttonPanel.BackgroundColor = new Color(73, 94, 171);
 
@@ -155,7 +145,7 @@ namespace WorldGenPreviewer
 			calculatedWidth += spacing + 32;
 
 			buttonPanel.Append(cancelButton);
-			cancelButton.OnLeftClick += CancelClick;
+			cancelButton.OnLeftClick += CancelClick; // todo, not working? only working if paused first?
 			cancelButton.Left.Pixels = calculatedWidth;
 			cancelButton.Top.Pixels = spacing;
 			calculatedWidth += spacing + 32;
@@ -188,29 +178,8 @@ namespace WorldGenPreviewer
 		}
 
 		private void CancelClick(UIMouseEvent evt, UIElement listeningElement) {
-			// This approach left the world gen continuing in the other thread, corrupting subsequent world gen attempts
-			//throw new Exception("WorldGenPreviewer: User canceled World Gen\n");
+			WorldGenPreviewerModSystem.cancelRequested = true;
 
-			// This didn't work because the enumerator is used in the foreach.
-			//FieldInfo passesFieldInfo = typeof(WorldGenerator).GetField("_passes", BindingFlags.Instance | BindingFlags.NonPublic);
-			//FieldInfo generatorFieldInfo = typeof(WorldGen).GetField("_generator", BindingFlags.Static | BindingFlags.NonPublic);
-			//WorldGenerator _generator = (WorldGenerator)generatorFieldInfo.GetValue(null);
-			//passesFieldInfo.SetValue(_generator, null);
-
-			// saveLock prevents save, but needs to be restored to false.
-			WorldGenPreviewerModSystem.saveLockForced = true;
-			Main.skipMenu = true;
-			// WorldGen.saveLock = true;
-			FieldInfo methodFieldInfo = typeof(PassLegacy).GetField("_method", BindingFlags.Instance | BindingFlags.NonPublic);
-			// This method still can't cancel infinite loops in passes. This can't be avoided. We could try forcing an exception on the world gen thread like `Main.tile = null`, but we'd have to restore the reference somehow.
-			foreach (var item in passesList._items) {
-				UIPassItem passitem = item as UIPassItem;
-
-				PassLegacy passLegacy = passitem.pass as PassLegacy;
-				if (passLegacy != null) {
-					methodFieldInfo.SetValue(passLegacy, (WorldGenLegacyMethod)delegate (GenerationProgress progress, GameConfiguration config) { });
-				}
-			}
 			WorldGenPreviewerModSystem.continueWorldGen = true;
 			WorldGenPreviewerModSystem.pauseAfterContinue = false;
 			WorldGenPreviewerModSystem.pauseAfterPass = null;
@@ -239,16 +208,12 @@ namespace WorldGenPreviewer
 
 		bool listHidden = false;
 		private void MenuClick(UIMouseEvent evt, UIElement listeningElement) {
-			//Main.PlaySound(10, -1, -1, 1);
-			//ErrorLogger.Log("MENU");
-			//statusLabel.SetText("Status: ??...");
 			listHidden = !listHidden;
 			passesPanel.Left.Pixels = listHidden ? panelWidth : 0;
 			passesPanel.Recalculate();
 		}
 
 		private void PreviousClick(UIMouseEvent evt, UIElement listeningElement) {
-			//Main.PlaySound(10, -1, -1, 1);
 			statusLabel.SetText("Status: Waiting to do this step again...");
 			WorldGenPreviewerModSystem.repeatPreviousStep = true;
 			WorldGenPreviewerModSystem.continueWorldGen = false;
@@ -264,21 +229,6 @@ namespace WorldGenPreviewer
 			statusLabel.SetText("Status: Pausing...");
 		}
 
-		//public void Resize()
-		//      {
-		//          float num = this.spacing;
-		//          for (int i = 0; i < this.buttonView.children.Count; i++)
-		//          {
-		//              if (this.buttonView.children[i].Visible)
-		//              {
-		//                  this.buttonView.children[i].X = num;
-		//                  num += this.buttonView.children[i].Width + this.spacing;
-		//              }
-		//          }
-		//          base.Width = num;
-		//          this.buttonView.Width = base.Width;
-		//      }
-
 		public override void OnActivate() {
 			if (PlayerInput.UsingGamepadUI) {
 				UILinkPointNavigator.Points[3000].Unlink();
@@ -292,13 +242,27 @@ namespace WorldGenPreviewer
 			genprogress = typeof(GenerationProgress).GetField("_totalProgress", BindingFlags.Instance | BindingFlags.NonPublic);
 		}
 
-		internal static bool BadPass;
+		//internal static bool BadPass;
 		protected override void DrawSelf(SpriteBatch spriteBatch) {
-			if (BadPass)
-				return;
+			//if (BadPass)
+			//	return;
 
-			Vector2 MousePosition = new Vector2((float)Main.mouseX, (float)Main.mouseY);
-			if (passesPanel.ContainsPoint(MousePosition)) {
+			if (menuButton.IsMouseHovering)
+				UICommon.TooltipMouseText("Show steps list");
+			if (previousButton.IsMouseHovering)
+				UICommon.TooltipMouseText("Repeat previous step");
+			if (playButton.IsMouseHovering)
+				UICommon.TooltipMouseText("Resume");
+			if (pauseButton.IsMouseHovering)
+				UICommon.TooltipMouseText("Pause");
+			if (nextButton.IsMouseHovering)
+				UICommon.TooltipMouseText("Advance to next step");
+			if (structureButton.IsMouseHovering)
+				UICommon.TooltipMouseText("Show protected structures");
+			if (cancelButton.IsMouseHovering)
+				UICommon.TooltipMouseText("Cancel");
+
+			if (passesPanel.ContainsPoint(Main.MouseScreen)) {
 				Main.LocalPlayer.mouseInterface = true;
 			}
 

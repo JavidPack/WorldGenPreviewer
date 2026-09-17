@@ -3,15 +3,15 @@ Mods: {
 		Configs: {
 			Config: {
 				StartWorldgenPaused: {
-					/* Tooltip:
+					Label: 世界生成开始时暂停
+					Tooltip:
 						'''
-						Start Worldgen Paused
-						Useful if you need to skip or repeat an early world generation pass.
-						''' */
-					// Label: Start Worldgen Paused
+						在世界生成开始时暂停
+						如果需要跳过或重复早期的世界生成步骤，此功能会很有用
+						'''
 				}
 
-				// DisplayName: Config
+				DisplayName: 配置
 			}
 		}
 	}
